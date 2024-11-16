@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define NUMERO_DE_JOGADORES 10
-#define PORCENTAGEM_DE_GANHAR 25
+#define PORCENTAGEM_DE_GANHAR 50
 #define PORCENTAGEM_DE_APOSTA 25
 #define PORCENTAGEM_RETORNADA 100
 #define DINHEIRO_INICIAL_DO_CASSINO 1000
@@ -50,11 +50,17 @@ int main(){
         pthread_create(&threads[i], NULL, jogar, (void*)&jogadores[i]);
     }
 
+    float dinheiro_antes = DINHEIRO_INICIAL_DO_CASSINO + NUMERO_DE_JOGADORES * DINHEIRO_INICIAL_DOS_JOGADORES;
+    float dinheiro_depois = dinheiro_cassino;
+
     for (int i = 0; i < NUMERO_DE_JOGADORES; i++) {
-        printf("Jogador %d: %.2f reais\n", jogadores[i].id, jogadores[i].dinheiro);
+        dinheiro_depois += jogadores[i].dinheiro;
+        printf("Jogador %d: %.2f reais\n", jogadores[i].id+1, jogadores[i].dinheiro);
         pthread_join(threads[i], NULL);
     }
-    printf("Cassino: %.2f reais\n", dinheiro_cassino);
+    printf("Cassino: %.2f reais\n\n", dinheiro_cassino);
+
+    printf("Dinheiro antes = %.2f reais\nDinhero depois = %.2f reais\n", dinheiro_antes, dinheiro_depois);
 
     free(jogadores);
     return 0;
