@@ -9,7 +9,7 @@
 #define PORCENTAGEM_RETORNADA 100
 #define DINHEIRO_INICIAL_DO_CASSINO 1000
 #define DINHEIRO_INICIAL_DOS_JOGADORES 100
-#define NUMERO_DE_RODADAS 4
+#define NUMERO_DE_RODADAS 100
 
 float dinheiro_cassino = DINHEIRO_INICIAL_DO_CASSINO;
 
@@ -20,8 +20,10 @@ typedef struct{
 
 void* jogar(void* args){
     Jogador* jogador = (Jogador*)args;
+
     for(int i = 0; i < NUMERO_DE_RODADAS; i++){
-        if(dinheiro_cassino <= 0 || jogador->dinheiro <= 0){
+        if(jogador->dinheiro <= 0){
+            printf("Jogador %d quebrou\n", jogador->id);
             break;
         }
 
@@ -29,6 +31,7 @@ void* jogar(void* args){
         unsigned int sorte = rand() % 100;
         if(sorte < PORCENTAGEM_DE_GANHAR){
             jogador->dinheiro = jogador->dinheiro + dinheiro_apostado * PORCENTAGEM_RETORNADA / 100;
+            dinheiro_cassino = dinheiro_cassino - dinheiro_apostado * PORCENTAGEM_RETORNADA / 100;
         }
         else{
             jogador->dinheiro -= dinheiro_apostado;
@@ -42,12 +45,16 @@ void* jogar(void* args){
 int main(){
     srand(time(NULL));
     Jogador* jogadores = (Jogador*) malloc(NUMERO_DE_JOGADORES * sizeof(Jogador));
-    pthread_t threads[NUMERO_DE_JOGADORES]; 
+    pthread_t threads[NUMERO_DE_JOGADORES];
 
     for(int i = 0; i < NUMERO_DE_JOGADORES; i++){
         jogadores[i].id = i;
         jogadores[i].dinheiro = DINHEIRO_INICIAL_DOS_JOGADORES;
         pthread_create(&threads[i], NULL, jogar, (void*)&jogadores[i]);
+    }
+
+    for (int i = 0; i < NUMERO_DE_JOGADORES; i++) {
+        pthread_join(threads[i], NULL);
     }
 
     float dinheiro_antes = DINHEIRO_INICIAL_DO_CASSINO + NUMERO_DE_JOGADORES * DINHEIRO_INICIAL_DOS_JOGADORES;
@@ -56,12 +63,11 @@ int main(){
     for (int i = 0; i < NUMERO_DE_JOGADORES; i++) {
         dinheiro_depois += jogadores[i].dinheiro;
         printf("Jogador %d: %.2f reais\n", jogadores[i].id+1, jogadores[i].dinheiro);
-        pthread_join(threads[i], NULL);
     }
     printf("Cassino: %.2f reais\n\n", dinheiro_cassino);
 
     printf("Dinheiro antes = %.2f reais\nDinhero depois = %.2f reais\n", dinheiro_antes, dinheiro_depois);
 
-    free(jogadores);
+    free(jogadores); 
     return 0;
 }
