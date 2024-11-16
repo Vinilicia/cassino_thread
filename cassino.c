@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define NUMERO_DE_JOGADORES 10
-#define PORCENTAGEM_DE_GANHAR 50
+#define PORCENTAGEM_DE_GANHAR 40
 #define PORCENTAGEM_DE_APOSTA 25
 #define PORCENTAGEM_RETORNADA 100
 #define DINHEIRO_INICIAL_DO_CASSINO 1000
@@ -12,6 +12,9 @@
 #define NUMERO_DE_RODADAS 100
 
 float dinheiro_cassino = DINHEIRO_INICIAL_DO_CASSINO;
+int usar_mutex = 1;
+
+pthread_mutex_t mutex_cassino;
 
 typedef struct{
     int id;
@@ -31,11 +34,23 @@ void* jogar(void* args){
         unsigned int sorte = rand() % 100;
         if(sorte < PORCENTAGEM_DE_GANHAR){
             jogador->dinheiro = jogador->dinheiro + dinheiro_apostado * PORCENTAGEM_RETORNADA / 100;
+            if(usar_mutex){
+                pthread_mutex_lock(&mutex_cassino);
+            }
             dinheiro_cassino = dinheiro_cassino - dinheiro_apostado * PORCENTAGEM_RETORNADA / 100;
+            if(usar_mutex){
+                pthread_mutex_unlock(&mutex_cassino);
+            }
         }
         else{
             jogador->dinheiro -= dinheiro_apostado;
+            if(usar_mutex){
+                pthread_mutex_lock(&mutex_cassino);
+            }
             dinheiro_cassino += dinheiro_apostado;
+            if(usar_mutex){
+                pthread_mutex_unlock(&mutex_cassino);
+            }
         }
     }
 
@@ -44,8 +59,10 @@ void* jogar(void* args){
 
 int main(){
     srand(time(NULL));
+
     Jogador* jogadores = (Jogador*) malloc(NUMERO_DE_JOGADORES * sizeof(Jogador));
     pthread_t threads[NUMERO_DE_JOGADORES];
+    pthread_mutex_init(&mutex_cassino, NULL);
 
     for(int i = 0; i < NUMERO_DE_JOGADORES; i++){
         jogadores[i].id = i;
@@ -69,5 +86,6 @@ int main(){
     printf("Dinheiro antes = %.2f reais\nDinhero depois = %.2f reais\n", dinheiro_antes, dinheiro_depois);
 
     free(jogadores); 
+    pthread_mutex_destroy(&mutex_cassino);
     return 0;
 }
