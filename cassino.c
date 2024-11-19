@@ -9,16 +9,16 @@
 #define PORCENTAGEM_RETORNADA 100
 #define DINHEIRO_INICIAL_DO_CASSINO 1000
 #define DINHEIRO_INICIAL_DOS_JOGADORES 100
-#define NUMERO_DE_RODADAS 100
+#define NUMERO_DE_RODADAS 1000
 
-float dinheiro_cassino = DINHEIRO_INICIAL_DO_CASSINO;
-int usar_mutex = 1;
+double dinheiro_cassino = DINHEIRO_INICIAL_DO_CASSINO;
+int usar_mutex = 0;
 
 pthread_mutex_t mutex_cassino;
 
 typedef struct{
     int id;
-    float dinheiro;
+    double dinheiro;
 }Jogador;
 
 void* jogar(void* args){
@@ -26,11 +26,11 @@ void* jogar(void* args){
 
     for(int i = 0; i < NUMERO_DE_RODADAS; i++){
         if(jogador->dinheiro <= 0){
-            printf("Jogador %d quebrou\n", jogador->id);
+            printf("Jogador %d quebrou\n", jogador->id + 1);
             break;
         }
 
-        float dinheiro_apostado = jogador->dinheiro * PORCENTAGEM_DE_APOSTA / 100;
+        double dinheiro_apostado = jogador->dinheiro * PORCENTAGEM_DE_APOSTA / 100;
         unsigned int sorte = rand() % 100;
         if(sorte < PORCENTAGEM_DE_GANHAR){
             jogador->dinheiro = jogador->dinheiro + dinheiro_apostado * PORCENTAGEM_RETORNADA / 100;
@@ -74,8 +74,8 @@ int main(){
         pthread_join(threads[i], NULL);
     }
 
-    float dinheiro_antes = DINHEIRO_INICIAL_DO_CASSINO + NUMERO_DE_JOGADORES * DINHEIRO_INICIAL_DOS_JOGADORES;
-    float dinheiro_depois = dinheiro_cassino;
+    double dinheiro_antes = DINHEIRO_INICIAL_DO_CASSINO + NUMERO_DE_JOGADORES * DINHEIRO_INICIAL_DOS_JOGADORES;
+    double dinheiro_depois = dinheiro_cassino;
 
     for (int i = 0; i < NUMERO_DE_JOGADORES; i++) {
         dinheiro_depois += jogadores[i].dinheiro;
